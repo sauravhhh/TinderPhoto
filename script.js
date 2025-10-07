@@ -212,6 +212,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Preview button handler
     previewBtn.addEventListener('click', function() {
+        // Update photo data to ensure it's current
+        updatePhotoData();
+        
         if (photoData.length === 0) {
             showToast('Please upload at least one photo');
             return;
