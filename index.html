@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tinder Photo Preview Tool</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Include html2canvas library for screenshot functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -41,16 +43,27 @@
             <div class="preview-header">
                 <h2>Profile Preview</h2>
             </div>
-            <div class="preview-mode-buttons">
-                <button class="mode-btn active" id="arrangedModeBtn">Arranged Order</button>
-                <button class="mode-btn" id="originalModeBtn">Original Order</button>
+            
+            <!-- Preview Display Area (what user sees) -->
+            <div class="preview-display-area">
+                <div class="preview-main-photo" id="previewMainPhoto">
+                    <!-- Main photo will be inserted here -->
+                </div>
+                <div class="preview-photo-bar" id="previewPhotoBar">
+                    <!-- Photo thumbnails will be inserted here -->
+                </div>
             </div>
-            <div class="preview-main-photo" id="previewMainPhoto">
-                <!-- Main photo will be inserted here -->
+            
+            <!-- Preview Capture Area (used for download) -->
+            <div class="preview-capture-area" id="previewCaptureArea">
+                <div class="capture-main-photo" id="captureMainPhoto">
+                    <!-- Main photo will be inserted here -->
+                </div>
+                <div class="capture-photo-bar" id="capturePhotoBar">
+                    <!-- Photo thumbnails will be inserted here -->
+                </div>
             </div>
-            <div class="preview-photo-bar" id="previewPhotoBar">
-                <!-- Photo thumbnails will be inserted here -->
-            </div>
+            
             <div class="preview-controls">
                 <button class="download-btn" id="downloadBtn">Download Preview</button>
             </div>
