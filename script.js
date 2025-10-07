@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewMainPhoto = document.getElementById('previewMainPhoto');
     const previewPhotoBar = document.getElementById('previewPhotoBar');
     const downloadBtn = document.getElementById('downloadBtn');
-    const arrangedModeBtn = document.getElementById('arrangedModeBtn');
-    const originalModeBtn = document.getElementById('originalModeBtn');
+    const previewCaptureArea = document.getElementById('previewCaptureArea');
+    const captureMainPhoto = document.getElementById('captureMainPhoto');
+    const capturePhotoBar = document.getElementById('capturePhotoBar');
     
     let currentMainPhotoIndex = 0;
     let photoData = [];
-    let currentPreviewMode = 'arranged'; // 'arranged' or 'original'
     
     // Initialize photo grid
     function initGrid() {
@@ -217,96 +217,105 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Set initial mode to arranged
-        currentPreviewMode = 'arranged';
-        renderPreview(currentPreviewMode);
-        
-        // Show modal
-        previewModal.style.display = 'block';
-    });
-    
-    // Render preview based on mode
-    function renderPreview(mode) {
-        currentPreviewMode = mode;
-        currentMainPhotoIndex = 0;
-        
         // Clear previous preview
         previewMainPhoto.innerHTML = '';
         previewPhotoBar.innerHTML = '';
+        captureMainPhoto.innerHTML = '';
+        capturePhotoBar.innerHTML = '';
         
-        // Update active mode button
-        arrangedModeBtn.classList.toggle('active', mode === 'arranged');
-        originalModeBtn.classList.toggle('active', mode === 'original');
-        
-        // Get photos in the correct order
-        let orderedPhotos;
-        if (mode === 'arranged') {
-            // Use photoData as is (sorted by position)
-            orderedPhotos = [...photoData];
-        } else {
-            // Sort by timestamp (original upload order)
-            orderedPhotos = [...photoData].sort((a, b) => a.timestamp - b.timestamp);
-        }
+        // Get photos in original order (by timestamp)
+        const orderedPhotos = [...photoData].sort((a, b) => a.timestamp - b.timestamp);
         
         // Set main photo (first photo in the ordered list)
         if (orderedPhotos.length > 0) {
             previewMainPhoto.innerHTML = `
                 <img src="${orderedPhotos[0].src}" alt="Main Photo">
             `;
+            captureMainPhoto.innerHTML = `
+                <img src="${orderedPhotos[0].src}" alt="Main Photo">
+            `;
         }
         
         // Set photo bar with all photos
         orderedPhotos.forEach((photo, index) => {
-            const thumbnail = document.createElement('div');
-            thumbnail.className = 'preview-thumbnail';
+            // Create preview thumbnail
+            const previewThumbnail = document.createElement('div');
+            previewThumbnail.className = 'preview-thumbnail';
             if (index === 0) {
-                thumbnail.classList.add('active');
+                previewThumbnail.classList.add('active');
             }
-            thumbnail.innerHTML = `
+            previewThumbnail.innerHTML = `
                 <img src="${photo.src}" alt="Photo">
             `;
             
-            thumbnail.addEventListener('click', function() {
-                // Update main photo
+            previewThumbnail.addEventListener('click', function() {
+                // Update main photo in preview
                 previewMainPhoto.innerHTML = `
                     <img src="${photo.src}" alt="Main Photo">
                 `;
                 
-                // Update active thumbnail
+                // Update main photo in capture area
+                captureMainPhoto.innerHTML = `
+                    <img src="${photo.src}" alt="Main Photo">
+                `;
+                
+                // Update active thumbnail in preview
                 document.querySelectorAll('.preview-thumbnail').forEach(thumb => {
                     thumb.classList.remove('active');
                 });
-                thumbnail.classList.add('active');
+                previewThumbnail.classList.add('active');
+                
+                // Update active thumbnail in capture area
+                const captureThumbnails = document.querySelectorAll('.capture-thumbnail');
+                captureThumbnails.forEach(thumb => {
+                    thumb.classList.remove('active');
+                });
+                if (captureThumbnails[index]) {
+                    captureThumbnails[index].classList.add('active');
+                }
                 
                 currentMainPhotoIndex = index;
             });
             
-            previewPhotoBar.appendChild(thumbnail);
+            previewPhotoBar.appendChild(previewThumbnail);
+            
+            // Create capture thumbnail
+            const captureThumbnail = document.createElement('div');
+            captureThumbnail.className = 'capture-thumbnail';
+            if (index === 0) {
+                captureThumbnail.classList.add('active');
+            }
+            captureThumbnail.innerHTML = `
+                <img src="${photo.src}" alt="Photo">
+            `;
+            
+            capturePhotoBar.appendChild(captureThumbnail);
         });
-    }
-    
-    // Mode button handlers
-    arrangedModeBtn.addEventListener('click', function() {
-        renderPreview('arranged');
-    });
-    
-    originalModeBtn.addEventListener('click', function() {
-        renderPreview('original');
+        
+        // Show modal
+        previewModal.style.display = 'block';
     });
     
     // Download button handler
     downloadBtn.addEventListener('click', function() {
-        // Get the current main photo src
-        const mainPhotoImg = previewMainPhoto.querySelector('img');
-        if (mainPhotoImg) {
+        // Use html2canvas to capture the preview area
+        html2canvas(previewCaptureArea, {
+            backgroundColor: '#ffffff',
+            scale: 2, // Higher resolution
+            logging: false,
+            useCORS: true
+        }).then(canvas => {
+            // Create download link
             const link = document.createElement('a');
-            link.href = mainPhotoImg.src;
-            link.download = `tinder-photo-${currentPreviewMode}-${Date.now()}.jpg`;
-            document.body.appendChild(link);
+            link.download = 'tinder-profile-preview.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
-            document.body.removeChild(link);
-            showToast('Photo downloaded successfully');
-        }
+            
+            showToast('Preview downloaded successfully');
+        }).catch(error => {
+            console.error('Error capturing preview:', error);
+            showToast('Error downloading preview. Please try again.');
+        });
     });
     
     // Close modal when clicking on X or outside modal
